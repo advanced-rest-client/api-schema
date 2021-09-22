@@ -28,7 +28,7 @@
     "email": "arc@mulesoft.com"
   },
   "dependencies": {
-    "@api-components/amf-helper-mixin": "^4.5.2",
+    "@api-components/amf-helper-mixin": "^4.5.3",
     "@pawel-up/data-mock": "^0.1.7"
   },
   "devDependencies": {
@@ -59,7 +59,7 @@
     "lint:types": "tsc",
     "lint": "npm run lint:eslint",
     "format": "npm run format:eslint",
-    "test": "web-test-runner test/**/*.test.js --coverage --node-resolve --playwright --browsers chromium webkit",
+    "test": "web-test-runner test/**/*.test.js --coverage --node-resolve --playwright --browsers chromium webkit firefox",
     "test:watch": "web-test-runner test/**/*.test.js --node-resolve --watch --playwright --browsers chromium",
     "gen:wc": "wca analyze \"*.js\" --outFile custom-elements.json",
     "prepare:apis": "node demo/model.js",
