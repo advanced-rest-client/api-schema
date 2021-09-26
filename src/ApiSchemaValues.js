@@ -34,12 +34,16 @@ export class ApiSchemaValues {
    */
   static readInputValue(parameter, schema, opts={}) {
     const { required } = parameter;
-    const { defaultValueStr } = schema;
+    const { defaultValueStr, values } = schema;
     if (!required && opts.requiredOnly === true) {
       return undefined;
     }
     if (defaultValueStr) {
       return ApiSchemaValues.readTypedValue(defaultValueStr, schema.dataType);
+    }
+    if (Array.isArray(values) && values.length) {
+      const firstEnum = /** @type ApiScalarNode */ (values[0]);
+      return ApiSchemaValues.readTypedValue(firstEnum.value, firstEnum.dataType);
     }
     if (opts.fromExamples) {
       /** @type ApiExample[] */
