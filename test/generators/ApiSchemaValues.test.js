@@ -235,6 +235,16 @@ describe('ApiSchemaValues', () => {
       assert.strictEqual(result, '2021-08-03T20:21:22.012Z');
     });
 
+    it(`parses input for dateTime, rfc3339 as OAS date-time`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.dateTime,
+        format: 'date-time',
+      });
+      const result = ApiSchemaValues.parseScalarInput('2021-08-03T20:21:22.012Z', shape);
+      assert.strictEqual(result, '2021-08-03T20:21:22.012Z');
+    });
+
     it(`parses input for dateTime, rfc2616`, () => {
       const shape = /** @type ApiScalarShape */ ({
         id: '',
@@ -447,6 +457,110 @@ describe('ApiSchemaValues', () => {
       const scalar = /** @type ApiScalarShape */ (store.getShape(model, 'ScalarNumberWithExample'));
       const result = ApiSchemaValues.inputValueFromExamples(scalar.examples);
       assert.strictEqual(result, 24);
+    });
+  });
+
+  describe('generateDefaultValue()', () => {
+    [
+      ns.w3.xmlSchema.number,
+      ns.aml.vocabularies.shapes.number,
+      ns.w3.xmlSchema.integer,
+      ns.aml.vocabularies.shapes.integer,
+      ns.w3.xmlSchema.float,
+      ns.aml.vocabularies.shapes.float,
+      ns.w3.xmlSchema.long,
+      ns.aml.vocabularies.shapes.long,
+      ns.w3.xmlSchema.double,
+      ns.aml.vocabularies.shapes.double,
+    ].forEach((key) => {
+      it(`returns a default type value for ${key}`, () => {
+        const shape = /** @type ApiScalarShape */ ({
+          id: '',
+          dataType: key,
+        });
+        const result = ApiSchemaValues.generateDefaultValue(shape);
+        assert.strictEqual(result,  0);
+      });
+    });
+
+    [
+      ns.w3.xmlSchema.boolean,
+      ns.aml.vocabularies.shapes.boolean,
+    ].forEach((key) => {
+      it(`returns a default type value for ${key}`, () => {
+        const shape = /** @type ApiScalarShape */ ({
+          id: '',
+          dataType: key,
+        });
+        const result = ApiSchemaValues.generateDefaultValue(shape);
+        assert.strictEqual(result,  false);
+      });
+    });
+
+    it(`returns a random value for ${ns.w3.xmlSchema.date}`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.date,
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+    });
+
+    it(`returns a random value for ${ns.w3.xmlSchema.time}`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.time,
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^[0-9]{2}:[0-9]{2}:[0-9]{2}$/);
+    });
+
+    it(`returns a random value for ${ns.aml.vocabularies.shapes.dateTimeOnly}`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.aml.vocabularies.shapes.dateTimeOnly,
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$/);
+    });
+
+    it(`returns a random value for ${ns.w3.xmlSchema.dateTime} without format`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.dateTime,
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/);
+    });
+
+    it(`returns a random value for ${ns.w3.xmlSchema.dateTime} with rfc3339 format`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.dateTime,
+        format: 'rfc3339',
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/);
+    });
+
+    it(`returns a random value for ${ns.w3.xmlSchema.dateTime} with date-time format`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.dateTime,
+        format: 'date-time',
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$/);
+    });
+
+    it(`returns a random value for ${ns.w3.xmlSchema.dateTime} with rfc2616 format`, () => {
+      const shape = /** @type ApiScalarShape */ ({
+        id: '',
+        dataType: ns.w3.xmlSchema.dateTime,
+        format: 'rfc2616',
+      });
+      const result = ApiSchemaValues.generateDefaultValue(shape);
+      assert.match(result, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), ([0-3][0-9]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) ([0-9]{4}) ([01][0-9]|2[0-3])(:[0-5][0-9]){2} GMT$/);
     });
   });
 });

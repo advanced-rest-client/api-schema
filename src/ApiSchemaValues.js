@@ -180,7 +180,7 @@ export class ApiSchemaValues {
       case ns.aml.vocabularies.shapes.nil:
       case ns.w3.xmlSchema.nil: return null;
       case ns.w3.xmlSchema.date: return new Time().dateOnly();
-      case ns.w3.xmlSchema.dateTime: return new Time().dateTime(/** @type {"rfc3339" | "rfc2616"} */ (schema.format));
+      case ns.w3.xmlSchema.dateTime: return new Time().dateTime(/** @type {"rfc3339" | "rfc2616"} */ (schema.format === 'date-time' ? 'rfc3339' : schema.format));
       case ns.aml.vocabularies.shapes.dateTimeOnly: return new Time().dateTimeOnly();
       case ns.w3.xmlSchema.time: return new Time().timeOnly();
       default: return undefined;
@@ -290,7 +290,8 @@ export class ApiSchemaValues {
     if (format === 'rfc2616') {
       return d.toUTCString();
     }
-    if (format === 'rfc3339') {
+    // OAS has the `date-time` format describing rfc3339.
+    if (['rfc3339', 'date-time'].includes(format)) {
       return d.toISOString();
     }
     return undefined;
