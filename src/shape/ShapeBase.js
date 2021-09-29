@@ -103,7 +103,7 @@ export class ShapeBase {
   [scalarValue](schema) {
     const { defaultValue, examples, values, inherits, dataType } = schema;
     // check the default value
-    if (defaultValue) {
+    if (!this.opts.renderExamples && defaultValue) {
       const gen = new JsonDataNodeGenerator();
       const processed = gen.processNode(defaultValue);
       // return ApiSchemaValues.readTypedValue(processed, dataType);

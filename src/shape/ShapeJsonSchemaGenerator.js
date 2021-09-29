@@ -321,6 +321,17 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
    * @returns {any}
    */
   [anyShapeObject](schema) {
+    const { and=[] } = schema;
+    if (and.length) {
+      let result = {};
+      and.forEach((item) => {
+        const props = this.toObject(item);
+        if (typeof props === 'object') {
+          result = { ...result, ...props };
+        }
+      });
+      return result;
+    }
     return this[scalarShapeObject](schema);
   }
 
@@ -336,7 +347,7 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
     const { types } = range;
     if (types.includes(ns.aml.vocabularies.shapes.ScalarShape)) {
       const defaultValue = schema.defaultValue || range.defaultValue;
-      if (defaultValue) {
+      if (!this.opts.renderExamples && defaultValue) {
         const gen = new JsonDataNodeGenerator();
         const value = gen.generate(defaultValue);
         if (value) {
