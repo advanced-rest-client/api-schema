@@ -28,7 +28,7 @@
     "email": "arc@mulesoft.com"
   },
   "dependencies": {
-    "@api-components/amf-helper-mixin": "^4.5.11",
+    "@api-components/amf-helper-mixin": "^4.5.12",
     "@pawel-up/data-mock": "^0.1.7"
   },
   "devDependencies": {
