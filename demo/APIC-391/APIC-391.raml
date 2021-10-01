@@ -1,0 +1,44 @@
+#%RAML 1.0
+title: Shipment request experience API
+version: v1
+mediaType: [application/xml]
+
+types:
+  reference:
+    type: object
+    properties:
+      referenceType:
+        type: string
+        maxLength: 50
+      referenceValue:
+        type: string
+        maxLength: 100
+    xml:
+      name: reference
+  references:
+        type: reference[]
+        xml:
+          wrapped: true
+          name: references
+  shipmentRequest:
+    type: object
+    additionalProperties: false
+    description: Describes a single shipping request record
+    xml:
+      name: shipmentRequest
+    properties:
+      address:
+        type: string
+        maxLength: 60
+      comments:
+        type: string
+        default:
+      references?:
+        type: references        
+      
+/shipment-requests:
+  post:
+    body:
+      application/xml:
+        type: shipmentRequest | shipmentRequest[]
+        examples: !include examples/post-body-request-example.raml

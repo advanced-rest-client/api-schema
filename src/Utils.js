@@ -7,25 +7,29 @@ import { ns } from "@api-components/amf-helper-mixin";
 
 /**
    * @param {any} obj
+   * @param {number=} indent The current indent
    * @return {string} 
    */
-export function toXml(obj) {
+export function toXml(obj, indent=0) {
   if (typeof obj !== 'object') {
     return obj;
   }
   let xml = '';
+  const tabs = new Array(indent).fill('  ').join('');
   Object.keys(obj).forEach((prop) => {
-    xml += Array.isArray(obj[prop]) ? '' : `<${prop}>`;
+    xml += Array.isArray(obj[prop]) ? '' : `${tabs}<${prop}>`;
     if (Array.isArray(obj[prop])) {
       obj[prop].forEach((item) => {
-        xml += `<${prop}>\n\t`;
-        xml += toXml({ ...item });
+        xml += `<${prop}>\n`;
+        xml += tabs;
+        xml += toXml({ ...item }, indent + 1);
         xml += `</${prop}>\n`;
       });
     } else if (typeof obj[prop] === "object") {
-      xml += toXml({ ...obj[prop] });
+      xml += `\n`;
+      xml += toXml({ ...obj[prop] }, indent + 1);
     } else {
-      xml += obj[prop];
+      xml += `${obj[prop]}`;
     }
     xml += Array.isArray(obj[prop]) ? '' : `</${prop}>\n`;
   });

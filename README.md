@@ -17,12 +17,14 @@ The library takes an AMF shape as the argument, a media type of the generated sc
 Scalars processing:
 
 1. If the shape is not required and `renderOptional` is not set return undefined.
+1. If there's an example and `renderExamples` is set then return parsed example value according to schema's data type
 1. If there's a default value, return the default value according to schema's data type
 1. If there's an enum value, return the first enum value according to schema's data type
-1. If there's an example and `renderExamples` is set then return parsed example value according to schema's data type
 1. Otherwise return a value that is a "default" value for the given data type ('', 0, false, null).
 
 Objects are processed property-by-property as defined above.
+
+Note, that the examples take precedence over the default or enum values. This is to make example generation consistent. If examples are processed after default value or enums then the result is a mix of examples and the other two, which is not what you expect.
 
 For unions you can pass the `selectedUnions[]` configuration option which the ids of all explicitly selected union members. When the library cannot find a member in the `selectedUnions` array then it takes the first available member to process the schema.
 

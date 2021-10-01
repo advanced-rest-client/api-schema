@@ -1,0 +1,21 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "id" : "http://www.openapplications.org/oagis/10",
+  "required" : [ "purchaseOrder" ],
+  "additionalProperties" : false,
+  "properties" : {
+    "typeCode" : {
+      "description" : "valid types include DirectShip,  Normal,  TransferOrder (e.g., the PO side of the transfer order)",
+      "$ref" : "#/definitions/token"
+    },
+    "actionCode" : {
+      "description" : "options include Original, Change, Cancel",
+      "$ref" : "#/definitions/token"
+    }
+  },
+  "definitions" : {
+    "token" : {
+      "type" : "string"
+    }
+  }
+}

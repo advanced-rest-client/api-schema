@@ -3,6 +3,7 @@ import { Time } from '@pawel-up/data-mock';
 import { ShapeRenderOptions } from '../types.js';
 
 export const scalarShapeObject: unique symbol;
+export const nilShapeObject: unique symbol;
 export const nodeShapeObject: unique symbol;
 export const unionShapeObject: unique symbol;
 export const fileShapeObject: unique symbol;
@@ -57,6 +58,7 @@ export abstract class ShapeBase {
    */
   abstract [exampleToObject](example: ApiExample): any;
   abstract [scalarShapeObject](schema: ApiScalarShape): any;
+  abstract [nilShapeObject](schema: ApiScalarShape): any;
   abstract [nodeShapeObject](schema: ApiNodeShape): any;
   abstract [unionShapeObject](schema: ApiUnionShape): any;
   abstract [fileShapeObject](schema: ApiFileShape): any;

@@ -1,0 +1,37 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/fc7ea85e-02e7-43f3-b5e2-750d94d34915/ #
+title: 00224662
+version: 1
+types:
+  Person: !include datatypes/Person.raml
+  Address: !include datatypes/Address.raml
+/customer:
+  post:
+    body:
+      application/xml:
+        type: !include datatypes/Person.raml
+    responses:
+      200:
+        body:
+          application/xml:
+            type: Person
+/should-be-incorrect:
+  post:
+    body:
+      application/xml:
+        type: !include datatypes/Person.raml
+    responses:
+      200:
+        body:
+          application/xml:
+            type: !include datatypes/Person.raml
+/incorrect-way:
+  post:
+    body:
+      application/xml:
+        type: !include datatypes/InlineType.raml
+    responses:
+      200:
+        body:
+          application/xml:
+            type: !include datatypes/InlineType.raml

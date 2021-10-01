@@ -1,0 +1,36 @@
+#%RAML 1.0
+title: api
+
+types:
+  Person:
+    properties:
+      addresses:
+        type: Address[]
+        xml:
+          wrapped: false
+  WrappedPerson:
+    properties:
+      addresses:
+        type: Address[]
+        xml:
+          wrapped: true
+  Address:
+    properties:
+      street: string
+      city: string
+
+/test1:
+  get:
+    responses:
+      200:
+        body:
+          application/xml:
+            type: Person
+
+/test2:
+  post:
+    responses:
+      200:
+        body:
+          application/xml:
+            type: WrappedPerson

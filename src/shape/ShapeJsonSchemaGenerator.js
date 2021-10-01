@@ -1,8 +1,10 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable class-methods-use-this */
 import { ns } from '@api-components/amf-helper-mixin';
 import { 
   ShapeBase,
   scalarShapeObject,
+  nilShapeObject,
   nodeShapeObject,
   unionShapeObject,
   fileShapeObject,
@@ -16,7 +18,7 @@ import {
   isNotRequiredUnion,
 } from './ShapeBase.js';
 import { JsonDataNodeGenerator } from '../data-node/JsonDataNodeGenerator.js';
-import { ApiSchemaValues } from '../ApiSchemaValues.js';
+// import { ApiSchemaValues } from '../ApiSchemaValues.js';
 
 export const unionDefaultValue = Symbol('unionDefaultValue');
 
@@ -70,11 +72,11 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
     if (types.includes(ns.aml.vocabularies.shapes.SchemaShape)) {
       return this[schemaShapeObject](/** @type ApiSchemaShape */ (schema));
     }
-    if (types.includes(ns.aml.vocabularies.shapes.ArrayShape) || types.includes(ns.aml.vocabularies.shapes.MatrixShape)) {
-      return this[arrayShapeObject](/** @type ApiArrayShape */ (schema));
-    }
     if (types.includes(ns.aml.vocabularies.shapes.TupleShape)) {
       return this[tupleShapeObject](/** @type ApiTupleShape */ (schema));
+    }
+    if (types.includes(ns.aml.vocabularies.shapes.ArrayShape) || types.includes(ns.aml.vocabularies.shapes.MatrixShape)) {
+      return this[arrayShapeObject](/** @type ApiArrayShape */ (schema));
     }
     return this[anyShapeObject](/** @type ApiAnyShape */ (schema));
   }
@@ -94,6 +96,14 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
    */
   [scalarShapeObject](schema) {
     return this[scalarValue](schema);
+  }
+
+  /**
+   * @param {ApiScalarShape} schema
+   * @returns {any|undefined}
+   */
+  [nilShapeObject](schema) {
+    return null;
   }
 
   /**
@@ -256,14 +266,6 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
   [arrayShapeObject](schema) {
     const { items } = schema;
     const defaultValue = schema.defaultValue || items.defaultValue;
-    if (defaultValue) {
-      const gen = new JsonDataNodeGenerator();
-      const arr = gen.processNode(defaultValue);
-      if (Array.isArray(arr)) {
-        return arr;
-      }
-    }
-    const result = [];
     let { examples=[] } = schema;
     const anyItems = /** @type ApiAnyShape */ (items);
     if (Array.isArray(anyItems.examples)) {
@@ -272,16 +274,25 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
     if (this.opts.renderExamples && examples && examples.length) {
       const example = examples.find((item) => !!item.value);
       const value = this[exampleToObject](example);
-      if (typeof value !== 'undefined') {
-        result.push(value);
+      if (Array.isArray(value)) {
+        return value;
       }
-    } else {
-      const value = this.toObject(items);
       if (typeof value !== 'undefined') {
-        result.push(value);
+        return [value];
+      }
+    } 
+    if (defaultValue) {
+      const gen = new JsonDataNodeGenerator();
+      const arr = gen.processNode(defaultValue);
+      if (Array.isArray(arr)) {
+        return arr;
       }
     }
-    return result;
+    const value = this.toObject(items);
+    if (typeof value !== 'undefined') {
+      return [value];
+    }
+    return [];
   }
 
   /**
@@ -289,7 +300,14 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
    * @returns {any}
    */
   [tupleShapeObject](schema) {
-    const result = [];
+    const { items, examples } = schema;
+    if (this.opts.renderExamples && examples && examples.length) {
+      const example = examples.find((item) => !!item.value);
+      const value = this[exampleToObject](example);
+      if (typeof value !== 'undefined') {
+        return [value];
+      }
+    } 
     if (schema.defaultValue) {
       const gen = new JsonDataNodeGenerator();
       const arr = gen.processNode(schema.defaultValue);
@@ -297,23 +315,17 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
         return arr;
       }
     }
-    const { items, examples } = schema;
-    
-    if (this.opts.renderExamples && examples && examples.length) {
-      const example = examples.find((item) => !!item.value);
-      const value = this[exampleToObject](example);
-      if (typeof value !== 'undefined') {
-        result.push(value);
-      }
-    } else if (items.length) {
+    if (items.length) {
+      const result = [];
       items.forEach((i) => {
         const value = this.toObject(i);
         if (typeof value !== 'undefined') {
           result.push(value);
         }
       });
+      return result;
     }
-    return result;
+    return [];
   }
 
   /**
@@ -346,14 +358,14 @@ export class ShapeJsonSchemaGenerator extends ShapeBase {
     }
     const { types } = range;
     if (types.includes(ns.aml.vocabularies.shapes.ScalarShape)) {
-      const defaultValue = schema.defaultValue || range.defaultValue;
-      if (!this.opts.renderExamples && defaultValue) {
-        const gen = new JsonDataNodeGenerator();
-        const value = gen.generate(defaultValue);
-        if (value) {
-          return ApiSchemaValues.readTypedValue(value, /** @type ApiScalarShape */ (range).dataType);
-        }
-      }
+      // const defaultValue = schema.defaultValue || range.defaultValue;
+      // if (!this.opts.renderExamples && defaultValue) {
+      //   const gen = new JsonDataNodeGenerator();
+      //   const value = gen.generate(defaultValue);
+      //   if (value) {
+      //     return ApiSchemaValues.readTypedValue(value, /** @type ApiScalarShape */ (range).dataType);
+      //   }
+      // }
       const anyRange = /** @type ApiAnyShape */ (range);
       return this[scalarShapeObject](anyRange);
     }

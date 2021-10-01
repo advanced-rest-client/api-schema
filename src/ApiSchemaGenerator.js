@@ -6,14 +6,16 @@ import { ShapeJsonSchemaGenerator } from './shape/ShapeJsonSchemaGenerator.js';
 import { ShapeXmlSchemaGenerator } from './shape/ShapeXmlSchemaGenerator.js';
 
 /** @typedef {import('@api-components/amf-helper-mixin').ApiShapeUnion} ApiShapeUnion */
+/** @typedef {import('@api-components/amf-helper-mixin').ApiAnyShape} ApiAnyShape */
 /** @typedef {import('./types').SchemaExample} SchemaExample */
 /** @typedef {import('./types').ShapeRenderOptions} ShapeRenderOptions */
 /** @typedef {import('./shape/ShapeBase').ShapeBase} ShapeBase */
 
 /**
- * A class that processes AMF's Shape to auto-generate a schema for a given media type.
+ * A class that processes AMF's Shape to auto-generate a schema from examples/type for a given media type.
  * This should be used when examples for the Shape are not available but the application still needs to 
  * render an example or a schema from the Shape.
+ * If examples can be found directly in the shape, use the `ApiExampleGenerator` instead.
  */
 export class ApiSchemaGenerator {
   /**
@@ -89,17 +91,25 @@ export class ApiSchemaGenerator {
    * @returns {SchemaExample|null} Customized Example with the `renderValue` that is the generated Example value.
    */
   toExample(shape) {
-    const value = this.generate(shape);
-    if (value === null || value === undefined) {
+    const renderValue = this.generate(shape);
+    if (renderValue === null || renderValue === undefined) {
       return null;
     }
-    return {
-      id: undefined,
+    const result = /** @type SchemaExample */ ({
+      id: `${shape.id}/generated`,
       strict: true,
       types: [ns.aml.vocabularies.apiContract.Example],
       mediaType: this.mime,
-      renderValue: value,
+      renderValue,
       customDomainProperties: [],
-    };
+    });
+    const typed = /** @type ApiAnyShape */ (shape);
+    if (Array.isArray(typed.examples) && typed.examples.length) {
+      const [example] = typed.examples;
+      if (example.value) {
+        result.value = example.value;
+      }
+    }
+    return result;
   }
 }

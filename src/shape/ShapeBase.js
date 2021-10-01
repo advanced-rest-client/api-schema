@@ -21,6 +21,7 @@ import { JsonDataNodeGenerator } from '../data-node/JsonDataNodeGenerator.js';
 /** @typedef {import('../types').ShapeRenderOptions} ShapeRenderOptions */
 
 export const scalarShapeObject = Symbol('scalarShapeObject');
+export const nilShapeObject = Symbol('nilShapeObject');
 export const nodeShapeObject = Symbol('nodeShapeObject');
 export const unionShapeObject = Symbol('unionShapeObject');
 export const fileShapeObject = Symbol('fileShapeObject');
@@ -191,6 +192,15 @@ export class ShapeBase {
    * @returns {any}
    */
   [scalarShapeObject](schema) {
+    return undefined;
+  }
+
+  /**
+   * @abstract
+   * @param {ApiScalarShape} schema
+   * @returns {any}
+   */
+  [nilShapeObject](schema) {
     return undefined;
   }
 

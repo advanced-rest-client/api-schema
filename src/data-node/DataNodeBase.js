@@ -63,9 +63,25 @@ export class DataNodeBase {
       const definition = properties[key];
       const result = this.processNode(definition);
       if (typeof result !== 'undefined') {
-        container[key] = result;
+        const name = this.normalizePropertyName(key);
+        container[name] = result;
       }
     });
     return container;
+  }
+
+  /**
+   * Normalizes a property name. It decodes URL encoded values.
+   * @param {string} name The property name to normalize
+   * @returns {string}
+   */
+  normalizePropertyName(name) {
+    let result = name;
+    try {
+      result = decodeURIComponent(result)
+    } catch (e) {
+      // ...
+    }
+    return result;
   }
 }

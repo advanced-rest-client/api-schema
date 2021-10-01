@@ -1,0 +1,17 @@
+#%RAML 1.0
+title: ACME Banking API
+
+mediaType: 
+- application/json
+
+types:
+  Customer: !include datatypes/Customer.raml
+
+/customers:
+  get:
+    responses:
+      200:
+        body:
+          application/xml:
+            type: Customer[]
+            examples: !include examples/CustomersExample.raml

@@ -1,0 +1,44 @@
+#%RAML 1.0
+title: xml-wrapper-demo
+
+types:
+  Delivery:
+    example: !include delivery.json
+    properties: 
+      orderId:
+        type: string
+        example: "732482783718"
+      lineItems:
+        type: DeliveryLine[]
+        minItems: 1
+  Delivery2:
+    example: !include delivery.json
+    properties:
+      orderId:
+        type: string
+        example: "732482783718"
+      lineItems:
+        type: DeliveryLine[]
+        minItems: 1
+        xml:
+          wrapped: true
+  DeliveryLine:
+    type: object
+    description: Order line item that is shipped
+    properties:
+      lineItemId:
+        type: string
+        example: "9738187235"
+      qty:
+        type: number
+        example: 10
+
+/delivery:
+  post:
+    body:
+      application/xml: Delivery
+
+/delivery2:
+  post:
+    body:
+      application/xml: Delivery2

@@ -1,6 +1,9 @@
 import { ApiExample } from "@api-components/amf-helper-mixin";
 
 export declare interface SchemaExample extends ApiExample {
+  /**
+   * The value to render as the example value.
+   */
   renderValue?: string;
   label?: string;
 }

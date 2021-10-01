@@ -1,0 +1,14 @@
+#%RAML 1.0
+title: error-demo
+
+uses:
+  dataModel: stock.raml
+
+/demo:
+  post:
+    body:
+      application/json:
+        type: dataModel.StockBalance
+      application/xml:
+        type: dataModel.StockBalance
+        

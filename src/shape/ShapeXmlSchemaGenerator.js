@@ -3,6 +3,7 @@ import { ns } from '@api-components/amf-helper-mixin';
 import { 
   ShapeBase,
   scalarShapeObject,
+  nilShapeObject,
   nodeShapeObject,
   unionShapeObject,
   fileShapeObject,
@@ -100,11 +101,11 @@ export class ShapeXmlSchemaGenerator extends ShapeBase {
     if (types.includes(ns.aml.vocabularies.shapes.SchemaShape)) {
       return this[schemaShapeObject](/** @type ApiSchemaShape */ (schema));
     }
-    if (types.includes(ns.aml.vocabularies.shapes.ArrayShape) || types.includes(ns.aml.vocabularies.shapes.MatrixShape)) {
-      return this[arrayShapeObject](/** @type ApiArrayShape */ (schema), options);
-    }
     if (types.includes(ns.aml.vocabularies.shapes.TupleShape)) {
       return this[tupleShapeObject](/** @type ApiTupleShape */ (schema));
+    }
+    if (types.includes(ns.aml.vocabularies.shapes.ArrayShape) || types.includes(ns.aml.vocabularies.shapes.MatrixShape)) {
+      return this[arrayShapeObject](/** @type ApiArrayShape */ (schema), options);
     }
     return this[anyShapeObject](/** @type ApiAnyShape */ (schema));
   }
@@ -256,6 +257,40 @@ export class ShapeXmlSchemaGenerator extends ShapeBase {
   }
 
   /**
+   * @param {ApiScalarShape} schema
+   * @param {ProcessNodeOptions=} options
+   * @returns {any|undefined}
+   */
+  [nilShapeObject](schema, options={}) {
+    const { xmlSerialization } = schema;
+    const content = '';
+    let label = options.forceName || shapeToXmlTagName(schema);
+    const attributes = [];
+    const parts = [];
+    if (xmlSerialization) {
+      const { namespace, prefix } = xmlSerialization;
+      if (namespace) {
+        const attrName = prefix ? `xmlns:${prefix}` : 'xmlns';
+        attributes.push(`${attrName}="${namespace}"`);
+      }
+      if (prefix) {
+        label = `${prefix}:${label}`;
+      }
+    }
+    let opening = `<${label}`;
+    if (attributes.length) {
+      opening += ' ';
+      opening += attributes.join(' ');
+    }
+    opening += '>';
+    parts.push(opening);
+    parts.push(content);
+    parts.push(`</${label}>`);
+    
+    return parts.join('');
+  }
+
+  /**
    * @param {ApiPropertyShape} schema
    * @param {ProcessNodeOptions=} options
    * @returns {string|undefined} The value for the property or undefined when cannot generate the value.
@@ -268,6 +303,9 @@ export class ShapeXmlSchemaGenerator extends ShapeBase {
     const { types } = range;
     if (types.includes(ns.aml.vocabularies.shapes.ScalarShape)) {
       return this[scalarShapeObject](/** @type ApiScalarShape */ (range));
+    } 
+    if (types.includes(ns.aml.vocabularies.shapes.NilShape)) {
+      return this[nilShapeObject](/** @type ApiScalarShape */ (range));
     }
     return this.processNode(range, options);
   }
@@ -285,66 +323,86 @@ export class ShapeXmlSchemaGenerator extends ShapeBase {
     const parts = [
       `${rootFill}<${label}>`
     ];
-    let itemName = label;
+    let nodeName = label;
     const anyItems = /** @type ApiAnyShape */ (items);
     if (anyItems.xmlSerialization && anyItems.xmlSerialization.name) {
-      itemName = normalizeXmlTagName(anyItems.xmlSerialization.name);
+      nodeName = normalizeXmlTagName(anyItems.xmlSerialization.name);
     }
+    // Note about wrapping. 
+    // XML array values are not wrapped by default. This means that by default 
+    // it produces a value like this:
+    // <ParentArray>
+    //   <arrayMemberProperty></arrayMemberProperty>
+    // </ParentArray>
+    // 
+    // When the object is marked as wrapped then the object is rendered as follows
+    // 
+    // <ParentArray>
+    //   <MemberObject>
+    //     <arrayMemberProperty></arrayMemberProperty>
+    //   <MemberObject>
+    // </ParentArray>
     const isWrapped = xmlSerialization && !!xmlSerialization.wrapped;
     const defaultValue = schema.defaultValue || items.defaultValue;
-    // default values are always added to the schema.
-    if (defaultValue) {
+    let itemName;
+    if (isWrapped) {
+      try {
+        // @ts-ignore
+        itemName = shapeToXmlTagName(schema.items);
+      } catch (e) {
+        itemName = 'UNKNOWN-NAME'
+      }
+    }
+    let { examples=[] } = schema;
+    if (Array.isArray(anyItems.examples)) {
+      examples = examples.concat(anyItems.examples);
+    }
+    if (this.opts.renderExamples && examples && examples.length) {
+      const example = examples.find((item) => !!item.value);
+      const value = this[exampleToObject](example);
+      if (typeof value !== 'undefined') {
+        const tagFill = new Array(currentIndent * 2 + 2).fill(' ').join('');
+        const valueFill = new Array(currentIndent * 2 + 4).fill(' ').join('');
+        parts.push(`${tagFill}<${nodeName}>`);
+        parts.push(`${valueFill}${value}`);
+        parts.push(`${tagFill}</${nodeName}>`);
+      }
+    } else if (defaultValue) {
       const gen = new XmlDataNodeGenerator();
       const value = gen.generate(defaultValue);
       if (value) {
         const tagFill = new Array(currentIndent * 2 + 2).fill(' ').join('');
         const valueFill = new Array(currentIndent * 2 + 4).fill(' ').join('');
-        parts.push(`${tagFill}<${itemName}>`);
+        parts.push(`${tagFill}<${nodeName}>`);
         parts.push(`${valueFill}${value.trim()}`);
+        parts.push(`${tagFill}</${nodeName}>`);
+      }
+    } else if (items.types.includes(ns.w3.shacl.NodeShape)) {
+      const typed = /** @type ApiNodeShape */ (items);
+      const tagFill = new Array(currentIndent * 2 + 2).fill(' ').join('');
+      const valueFill = isWrapped ? new Array(currentIndent * 2 + 4).fill(' ').join('') : tagFill;
+      if (isWrapped) {
+        parts.push(`${tagFill}<${itemName}>`);
+      }
+      const properties = this[collectProperties](typed);
+      properties.forEach((prop) => {
+        const value = this[propertyShapeObject](prop);
+        if (value) {
+          parts.push(`${valueFill}${value}`);
+        }
+      });
+      if (isWrapped) {
         parts.push(`${tagFill}</${itemName}>`);
       }
     } else {
-      let { examples=[] } = schema;
-      if (Array.isArray(anyItems.examples)) {
-        examples = examples.concat(anyItems.examples);
-      }
-      if (this.opts.renderExamples && examples && examples.length) {
-        const example = examples.find((item) => !!item.value);
-        const value = this[exampleToObject](example);
-        if (typeof value !== 'undefined') {
-          const tagFill = new Array(currentIndent * 2 + 2).fill(' ').join('');
-          const valueFill = new Array(currentIndent * 2 + 4).fill(' ').join('');
-          parts.push(`${tagFill}<${itemName}>`);
-          parts.push(`${valueFill}${value}`);
-          parts.push(`${tagFill}</${itemName}>`);
-        }
-      } else if (items.types.includes(ns.w3.shacl.NodeShape)) {
-        const typed = /** @type ApiNodeShape */ (items);
-        const tagFill = new Array(currentIndent * 2 + 2).fill(' ').join('');
-        const valueFill = isWrapped ? new Array(currentIndent * 2 + 4).fill(' ').join('') : tagFill;
-        if (isWrapped) {
-          parts.push(`${tagFill}<${itemName}>`);
-        }
-        const properties = this[collectProperties](typed);
-        properties.forEach((prop) => {
-          const value = this[propertyShapeObject](prop);
-          if (value) {
-            parts.push(`${valueFill}${value}`);
-          }
-        });
-        if (isWrapped) {
-          parts.push(`${tagFill}</${itemName}>`);
-        }
-      } else {
-        const opts = {
-          forceName: itemName,
-          indent: currentIndent + 1,
-        };
-        const value = this.processNode(items, opts);
-        if (typeof value !== 'undefined') {
-          const fill = new Array(currentIndent * 2 + 2).fill(' ').join('');
-          parts.push(`${fill}${value}`);
-        }
+      const opts = {
+        forceName: nodeName,
+        indent: currentIndent + 1,
+      };
+      const value = this.processNode(items, opts);
+      if (typeof value !== 'undefined') {
+        const fill = new Array(currentIndent * 2 + 2).fill(' ').join('');
+        parts.push(`${fill}${value}`);
       }
     }
     
@@ -449,7 +507,25 @@ export class ShapeXmlSchemaGenerator extends ShapeBase {
     return super[tupleShapeObject](schema);
   }
 
+  /**
+   * @param {ApiAnyShape} schema 
+   * @returns {string}
+   */
   [anyShapeObject](schema) {
+    const { examples=[] } = schema;
+    const label = shapeToXmlTagName(schema);
+    if (this.opts.renderExamples && examples && examples.length) {
+      const example = examples.find((item) => !!item.value);
+      const value = this[exampleToObject](example);
+      const parts = [];
+      if (typeof value !== 'undefined') {
+        const valueFill = `    `;
+        parts.push(`<${label}>`);
+        parts.push(`${valueFill}${value}`);
+        parts.push(`</${label}>`);
+      }
+      return parts.join('\n');
+    }
     return super[anyShapeObject](schema);
   }
 }
