@@ -1,6 +1,6 @@
 {
   "name": "@api-components/api-schema",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Schema generator based on the AMF graph LD model.",
   "license": "Apache-2.0",
   "main": "index.js",
@@ -28,24 +28,23 @@
     "email": "arc@mulesoft.com"
   },
   "dependencies": {
-    "@api-components/amf-helper-mixin": "^4.5.12",
+    "@api-components/amf-helper-mixin": "^4.5.16",
     "@pawel-up/data-mock": "^0.1.7"
   },
   "devDependencies": {
     "@advanced-rest-client/arc-demo-helper": "^3.0.3",
     "@api-components/api-model-generator": "^0.2.9",
-    "@commitlint/cli": "^13.2.0",
+    "@commitlint/cli": "^13.2.1",
     "@commitlint/config-conventional": "^13.2.0",
     "@open-wc/eslint-config": "^4.2.0",
     "@open-wc/testing": "^2.5.33",
-    "@web/dev-server": "^0.1.24",
+    "@web/dev-server": "^0.1.25",
     "@web/test-runner": "^0.13.18",
     "@web/test-runner-playwright": "^0.8.6",
-    "amf-client-js": "5.0.0-beta.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.1",
-    "lint-staged": "^11.1.2",
+    "lint-staged": "^11.2.2",
     "lit-element": "^2.5.1",
     "lit-html": "^1.4.1",
     "sinon": "^11.1.1",

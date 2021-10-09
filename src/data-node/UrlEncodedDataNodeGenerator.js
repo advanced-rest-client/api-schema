@@ -33,10 +33,12 @@ export class UrlEncodedDataNodeGenerator extends DataNodeBase {
     }
     const parts = Object.keys(obj).map((key) => {
       let value = obj[key];
-      if (typeof value === 'object') {
+      if (typeof value === 'object' && value !== null) {
         value = this.createUrlEncoded(value);
-      } else {
+      } else if (value) {
         value = wwwFormUrlEncode(value, true);
+      } else if (value === null) {
+        value = 'null';
       }
       return `${key}=${value}`;
     });
